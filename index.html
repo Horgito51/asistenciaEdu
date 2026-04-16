@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AsistenciaEdu — Sistema de Control Escolar</title>
+  <meta name="description" content="Sistema de asistencia diaria, notas y reportes de incidentes para docentes." />
+  <link rel="stylesheet" href="assets/style.css" />
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml" />
+</head>
+<body>
+
+<!-- ── NAV ── -->
+<nav class="nav">
+  <div class="nav-brand">
+    <div class="nav-logo">AS</div>
+    <div>
+      <div class="nav-title">AsistenciaEdu</div>
+      <div class="nav-subtitle">Sistema de Control Escolar · 3°B</div>
+    </div>
+  </div>
+  <div class="nav-right">
+    <span class="badge-fecha" id="fecha-hoy"></span>
+    <button class="btn-beta-nav" onclick="abrirModalBeta('nav')">
+      🚀 Únete a la beta
+    </button>
+  </div>
+</nav>
+
+<!-- ── TABS ── -->
+<div class="tabs-bar">
+  <button class="tab-main active" onclick="showView('asistencia')">📋 Asistencia</button>
+  <button class="tab-main"        onclick="showView('notas')">📊 Notas</button>
+  <button class="tab-main"        onclick="showView('incidentes')">⚠️ Incidentes</button>
+</div>
+
+<!-- ── MAIN ── -->
+<div class="main">
+
+  <!-- ===== ASISTENCIA ===== -->
+  <div class="view active" id="view-asistencia">
+    <div class="section-title">Control de asistencia diaria</div>
+    <div class="section-sub">Marca la presencia de cada estudiante · haz clic en un nombre para ver su perfil</div>
+
+    <div class="metrics">
+      <div class="metric"><div class="metric-label">Presentes</div><div class="metric-value c-green" id="cnt-p">0</div><div class="metric-delta">de 20 estudiantes</div></div>
+      <div class="metric"><div class="metric-label">Ausentes</div><div class="metric-value c-red" id="cnt-a">0</div><div class="metric-delta">sin justificar</div></div>
+      <div class="metric"><div class="metric-label">Tardanzas</div><div class="metric-value c-amber" id="cnt-t">0</div><div class="metric-delta">llegada fuera de hora</div></div>
+      <div class="metric"><div class="metric-label">Sin marcar</div><div class="metric-value c-blue" id="cnt-s">20</div><div class="metric-delta">pendientes hoy</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Lista de estudiantes</span>
+        <button class="btn btn-secondary btn-sm" onclick="marcarTodos('P')">Todos presentes</button>
+      </div>
+      <table class="table">
+        <thead><tr><th>#</th><th>Estudiante</th><th>Estado</th><th>Marcar</th></tr></thead>
+        <tbody id="tabla-est"></tbody>
+      </table>
+      <div class="send-bar">
+        <button class="btn btn-primary" onclick="enviarInspeccion()">Enviar a Inspección</button>
+        <button class="btn btn-secondary" onclick="limpiarMarcas()">Limpiar</button>
+        <span class="send-label">Se guarda y envía al confirmar</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== NOTAS ===== -->
+  <div class="view" id="view-notas">
+    <div class="section-title">Notas por materia</div>
+    <div class="section-sub">Selecciona la materia y la actividad · haz clic en un estudiante para su perfil completo</div>
+
+    <div class="metrics">
+      <div class="metric"><div class="metric-label">Promedio clase</div><div class="metric-value c-blue" id="n-prom">—</div><div class="metric-delta">todas las materias</div></div>
+      <div class="metric"><div class="metric-label">Aprobados</div><div class="metric-value c-green" id="n-apro">—</div><div class="metric-delta">promedio ≥ 7</div></div>
+      <div class="metric"><div class="metric-label">En riesgo</div><div class="metric-value c-red" id="n-repo">—</div><div class="metric-delta">promedio &lt; 7</div></div>
+      <div class="metric"><div class="metric-label">Actividades</div><div class="metric-value c-amber" id="n-acts">—</div><div class="metric-delta">en esta materia</div></div>
+    </div>
+
+    <div class="notas-layout">
+      <div class="sidebar">
+        <div class="sidebar-header">Materias</div>
+        <div id="mat-sidebar"></div>
+      </div>
+      <div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title" id="notas-titulo">—</span>
+            <button class="btn btn-secondary btn-sm" onclick="agregarActividad()">+ Actividad</button>
+          </div>
+          <div class="act-selector" id="act-chips"></div>
+          <div class="act-info">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span id="act-nombre-label" style="font-size:13px;font-weight:600;color:var(--text2);">—</span>
+              <span class="act-badge" id="act-tipo-label">—</span>
+            </div>
+            <span id="act-prom-label" style="font-size:12px;color:var(--muted2);"></span>
+          </div>
+          <table class="table">
+            <thead><tr><th>#</th><th>Estudiante</th><th>Nota</th><th>Estado</th><th>Perfil</th></tr></thead>
+            <tbody id="notas-body"></tbody>
+          </table>
+          <div class="send-bar">
+            <button class="btn btn-primary" onclick="abrirEnvioTodos()">Enviar boletines a todos</button>
+            <span class="send-label">O haz clic en un estudiante para su boletín individual</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== INCIDENTES ===== -->
+  <div class="view" id="view-incidentes">
+    <div class="section-title">Reportes de incidentes</div>
+    <div class="section-sub">Crea y envía reportes al profesor y representante</div>
+
+    <div class="two-col">
+      <div class="card">
+        <div class="card-header"><span class="card-title">Nuevo reporte</span></div>
+        <div class="incident-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Estudiante</label>
+              <select id="inc-est"></select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Severidad</label>
+              <select id="inc-sev">
+                <option value="bajo">Bajo</option>
+                <option value="medio">Medio</option>
+                <option value="alto">Alto</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Tipo</label>
+            <select id="inc-tipo">
+              <option>Conducta disruptiva</option>
+              <option>Conflicto entre estudiantes</option>
+              <option>Daño a propiedad</option>
+              <option>Ausentismo reiterado</option>
+              <option>Otro</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Descripción</label>
+            <textarea id="inc-desc" placeholder="Describe el incidente..."></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Notificar por</label>
+            <div class="notify-opts">
+              <button class="notify-btn locked" onclick="abrirPremium()">
+                <span class="premium-tag">PREMIUM</span>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.558 4.126 1.534 5.857L.054 23.223a.5.5 0 00.609.61l5.529-1.524A11.954 11.954 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.027-1.383l-.36-.214-3.735 1.03 1.003-3.63-.235-.374A9.818 9.818 0 1112 21.818z"/></svg>
+                WhatsApp
+              </button>
+              <button class="notify-btn free selected">
+                <span class="free-tag">GRATIS</span>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.927 13.31l-2.962-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.836.952z"/></svg>
+                Telegram
+              </button>
+            </div>
+            <span class="notify-hint" style="color:var(--cyan-border);">✓ Telegram gratis · <span style="color:var(--gold-border);">WhatsApp requiere Premium</span></span>
+          </div>
+          <button class="btn btn-primary" onclick="guardarIncidente()" style="width:100%;">Enviar reporte por Telegram</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">Historial</span></div>
+        <div class="incident-list" id="inc-list"></div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<!-- ── MODAL PERFIL ── -->
+<div class="modal-bg" id="modal-bg">
+  <div class="modal">
+    <div class="modal-nav">
+      <span class="modal-title" id="modal-title">Perfil del estudiante</span>
+      <button class="close-btn" onclick="cerrarModal('modal-bg')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="perfil-header">
+        <div class="avatar" id="p-avatar">--</div>
+        <div>
+          <div class="perfil-name" id="p-nombre">—</div>
+          <div class="perfil-meta">3°B · Prof. Ramírez · Período actual</div>
+        </div>
+        <div style="margin-left:auto;text-align:right;">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Promedio general</div>
+          <div id="p-prom-general" style="font-family:var(--mono);font-size:22px;font-weight:700;">—</div>
+        </div>
+      </div>
+      <div id="p-materias"></div>
+      <div style="margin-top:1rem;">
+        <div class="form-label" style="margin-bottom:8px;">Enviar boletín por</div>
+        <div class="notify-opts">
+          <button class="notify-btn locked" onclick="abrirPremium()">
+            <span class="premium-tag">PREMIUM</span>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.558 4.126 1.534 5.857L.054 23.223a.5.5 0 00.609.61l5.529-1.524A11.954 11.954 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.027-1.383l-.36-.214-3.735 1.03 1.003-3.63-.235-.374A9.818 9.818 0 1112 21.818z"/></svg>
+            WhatsApp
+          </button>
+          <button class="notify-btn free selected">
+            <span class="free-tag">GRATIS</span>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.927 13.31l-2.962-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.836.952z"/></svg>
+            Telegram
+          </button>
+        </div>
+        <span class="notify-hint" style="color:var(--cyan-border);">✓ Telegram gratis · <span style="color:var(--gold-border);">WhatsApp requiere Premium</span></span>
+        <div style="display:flex;gap:8px;margin-top:.75rem;">
+          <button class="btn btn-primary" style="flex:1;" onclick="enviarBoletinTg()">Enviar por Telegram</button>
+          <button class="btn btn-premium btn-sm" onclick="abrirPremium()">⭐ Premium</button>
+          <button class="btn btn-secondary" onclick="cerrarModal('modal-bg')">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODAL PREMIUM ── -->
+<div class="modal-bg" id="premium-bg">
+  <div class="modal premium-modal">
+    <div class="premium-header">
+      <div class="premium-icon">⭐</div>
+      <div class="premium-title">AsistenciaEdu Premium</div>
+      <div class="premium-sub">Desbloquea WhatsApp y más funciones</div>
+    </div>
+    <div class="modal-body">
+      <div class="mat-block" style="margin-bottom:1rem;">
+        <div class="premium-feature"><div class="feat-icon">💬</div><div><div style="font-weight:500;font-size:13px;color:#F1F5F9;">Envío por WhatsApp</div><div style="font-size:11px;color:var(--muted);">Boletines y reportes directo al representante</div></div></div>
+        <div class="premium-feature"><div class="feat-icon">📨</div><div><div style="font-weight:500;font-size:13px;color:#F1F5F9;">Envío masivo a todos los representantes</div><div style="font-size:11px;color:var(--muted);">Un clic para notificar a toda la clase</div></div></div>
+        <div class="premium-feature"><div class="feat-icon">🔔</div><div><div style="font-weight:500;font-size:13px;color:#F1F5F9;">Alertas automáticas de inasistencia</div><div style="font-size:11px;color:var(--muted);">Notificación inmediata al marcar ausente</div></div></div>
+        <div class="premium-feature"><div class="feat-icon">📄</div><div><div style="font-weight:500;font-size:13px;color:#F1F5F9;">Boletines en PDF</div><div style="font-size:11px;color:var(--muted);">Descarga y comparte reportes formateados</div></div></div>
+      </div>
+      <div style="background:var(--cyan-bg);border:1px solid var(--cyan-border);border-radius:8px;padding:.75rem 1rem;margin-bottom:.75rem;font-size:12px;color:var(--cyan);">
+        ✓ Telegram se mantiene gratuito en todos los planes
+      </div>
+      <div class="plan-price">
+        <div style="font-size:11px;color:#78350F;margin-bottom:4px;text-transform:uppercase;letter-spacing:.05em;">Plan institucional</div>
+        <div class="plan-amount">$29<span style="font-size:16px;color:#92400E;">.99</span></div>
+        <div class="plan-period">por mes · hasta 5 docentes · 200 estudiantes</div>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-premium" style="flex:1;justify-content:center;" onclick="abrirModalBeta('premium')">Contratar — Únete a la beta</button>
+        <button class="btn btn-secondary" onclick="cerrarModal('premium-bg')">Ahora no</button>
+      </div>
+      <div style="text-align:center;margin-top:.75rem;font-size:11px;color:var(--muted2);">Prueba gratuita de 14 días · Sin tarjeta de crédito</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODAL BETA REGISTRO ── -->
+<div class="modal-bg" id="beta-bg">
+  <div class="modal beta-modal">
+    <div class="beta-header">
+      <div class="beta-icon">🚀</div>
+      <div class="beta-title">Únete a la beta</div>
+      <div class="beta-sub">Sé de los primeros en usar AsistenciaEdu</div>
+    </div>
+    <div class="modal-body">
+      <p id="beta-context-msg" style="font-size:13px;color:var(--text3);margin-bottom:1rem;line-height:1.6;">
+        Regístrate para acceder a todas las funciones de la beta.
+      </p>
+      <div class="beta-perks">
+        <div class="beta-perk"><span class="beta-perk-icon">✅</span> Acceso gratuito durante la beta</div>
+        <div class="beta-perk"><span class="beta-perk-icon">📲</span> Notificaciones por Telegram incluidas</div>
+        <div class="beta-perk"><span class="beta-perk-icon">🎁</span> 3 meses Premium gratis al lanzamiento</div>
+        <div class="beta-perk"><span class="beta-perk-icon">🏫</span> Soporte directo con el equipo</div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:1rem;">
+        <button class="btn btn-primary" style="flex:1;" onclick="irAFormulario()">
+          Registrarme ahora →
+        </button>
+        <button class="btn btn-secondary" onclick="cerrarModal('beta-bg')">Quizás luego</button>
+      </div>
+      <div style="text-align:center;margin-top:.75rem;font-size:11px;color:var(--muted2);">
+        Solo tomará 1 minuto · Sin tarjeta de crédito
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── TOAST ── -->
+<div class="toast" id="toast"><span id="toast-msg"></span></div>
+
+<script src="assets/app.js"></script>
+</body>
+</html>
