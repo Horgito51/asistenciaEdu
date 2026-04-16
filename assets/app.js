@@ -282,7 +282,7 @@ function abrirModalBeta(contexto, extra) {
 
 function irAFormulario() {
   // Reemplaza esta URL con tu Google Form real
-  const GOOGLE_FORM_URL = 'https://forms.gle/TU_FORM_ID_AQUI';
+  const GOOGLE_FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSf5h-o23tH19KsZ8o56ddWMcGdLQbbdAHMIbgRw4Bj3RpTYZg/viewform?usp=publish-editor';
   window.open(GOOGLE_FORM_URL, '_blank');
   cerrarModal('beta-bg');
   showToast('✓ Gracias por registrarte en la beta');
